@@ -1,29 +1,23 @@
 // utils/googleSheetsLogger.js
-const { google } = require('googleapis');
-
 const logToSheet = async (userMessage, aiResponse, status = 'Success') => {
     try {
-        const auth = new google.auth.JWT(
-            process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-            null,
-            process.env.GOOGLE_PRIVATE_KEY,
-            ['https://www.googleapis.com/auth/spreadsheets']
-        );
+        const WEB_APP_URL = process.env.GOOGLE_SCRIPT_URL;
 
-        const sheets = google.sheets({ version: 'v4', auth });
-        
-        const timestamp = new Date().toLocaleString("en-SG", { timeZone: "Asia/Singapore" });
-
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: process.env.GOOGLE_SHEET_ID,
-            range: 'Sheet1!A:D',
-            valueInputOption: 'USER_ENTERED',
-            resource: {
-                values: [[timestamp, userMessage, aiResponse, status]],
-            },
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            redirect: 'follow', // CRITICAL: Tell Node to follow Google's redirect
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Use text/plain to avoid CORS pre-flight
+            body: JSON.stringify({
+                message: userMessage,
+                response: aiResponse,
+                status: status
+            })
         });
+
+        const result = await response.text();
+        console.log("📡 Apps Script Response:", result);
     } catch (error) {
-        console.error('Logging to Google Sheets failed:', error);
+        console.error('Apps Script Logging failed:', error.message);
     }
 };
 

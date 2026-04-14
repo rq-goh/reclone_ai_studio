@@ -1,20 +1,36 @@
-// Quick script to verify the Model and Controller logic
-const botConfig = require('./config/system_prompt');
-const geminiModel = require('./models/geminiModel');
+// test-api.js
+const path = require('path');
+// This ensures we point to the same .env.local that vercel dev is using
+require('dotenv').config({ path: path.resolve(__dirname, './.env.local') });
 
-// Manually setting the API key for local test if not using .env
-// process.env.GEMINI_API_KEY = "your_key_here"; 
+const geminiModel = require('./models/geminiModel');
+const { logToSheet } = require('./utils/googleSheetsLogger');
 
 async function runTest() {
-    console.log("🚀 Starting Test Run...");
+    console.log("🚀 Starting Test Run inside Vercel Dev Environment...");
+    
+    // Safety check: Verify variables are loaded
+    if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
+        console.error("❌ Error: Google Sheets variables are missing from .env.local");
+        return;
+    }
+
+    const testMessage = "Test message for DAVA Google Sheets Logger";
+    
     try {
-        const testMessage = "How do I create a pie chart in Python?";
+        console.log("📡 Step 1: Requesting response from Gemma...");
         const response = await geminiModel.generateResponse(testMessage);
-        console.log("\n--- AI Response ---");
-        console.log(response);
-        console.log("\n✅ Test Successful!");
+        console.log("✅ Response received.");
+
+        console.log("📊 Step 2: Logging to Google Sheets...");
+        await logToSheet(testMessage, response, 'Vercel-Dev-Test');
+        
+        console.log("\n✨ SUCCESS! Check your Google Sheet now.");
+        console.log("Location: https://docs.google.com/spreadsheets/d/1e4f3-4uDPlv42udGQi1YIegj4hew_9g2hqcc65M2Tig");
+
     } catch (error) {
-        console.error("❌ Test Failed:", error.message);
+        console.error("\n❌ Test Failed!");
+        console.error("Reason:", error.message);
     }
 }
 
