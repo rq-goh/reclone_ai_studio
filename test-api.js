@@ -15,7 +15,7 @@ async function runTest() {
         return;
     }
 
-    const testMessage = "Test message for DAVA Google Sheets Logger";
+    const testMessage = "test local";
     
     try {
         console.log("📡 Step 1: Requesting response from Gemma...");
