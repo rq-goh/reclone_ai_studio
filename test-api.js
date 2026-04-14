@@ -10,7 +10,7 @@ async function runTest() {
     console.log("🚀 Starting Test Run inside Vercel Dev Environment...");
     
     // Safety check: Verify variables are loaded
-    if (!process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_SHEET_ID) {
+    if (!process.env.GOOGLE_SHEET_ID) {
         console.error("❌ Error: Google Sheets variables are missing from .env.local");
         return;
     }

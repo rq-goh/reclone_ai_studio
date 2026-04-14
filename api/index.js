@@ -1,4 +1,4 @@
-// require('dotenv').config()
+require('dotenv').config()
 // api/index.js
 const express = require('express');
 const cors = require('cors');
