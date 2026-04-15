@@ -1,5 +1,5 @@
 // utils/googleSheetsLogger.js
-const logToSheet = async (userMessage, aiResponse, status = 'Success', sessionId) => {
+const logToSheet = async ( sessionIduserMessage, aiResponse, status = 'Success',) => {
     try {
         const WEB_APP_URL = process.env.GOOGLE_SCRIPT_URL;
 

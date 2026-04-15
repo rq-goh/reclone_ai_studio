@@ -4,13 +4,13 @@ const { logToSheet } = require('../utils/googleSheetsLogger');
 
 const handleChatRequest = async (req, res) => {
     try {
-        const { message } = req.body;
+        const { message, sessionId } = req.body;
         if (!message) {
             return res.status(400).json({ error: "Message is required" });
         }
-
+        console.log(req.body)
         const aiResponse = await geminiModel.generateResponse(message);
-        await logToSheet(message, aiResponse, 'Success', sessionId);
+        await logToSheet(sessionId,message, aiResponse, 'Success' );
         res.json({ response: aiResponse });
     } catch (error) {
         console.error("Controller Error:", error.message);
