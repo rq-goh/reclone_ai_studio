@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>AI Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .chat-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 500px;
+        height: 100vh;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        max-height: 100vh;
+        max-height: 100dvh;
+      }
+
+      .header {
+        padding: 12px 16px;
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        gap: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1rem, 5vw, 1.3rem);
+        color: #333;
+        font-weight: 500;
+        flex: 1;
+        min-width: 0;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      #clearBtn {
+        background: none;
+        color: #dc3545;
+        padding: 8px 12px;
+        font-size: 11px;
+        border: 1.5px solid #dc3545;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+        min-height: 32px;
+        min-width: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      #clearBtn:active {
+        background: #dc3545;
+        color: white;
+      }
+
+      #clearBtn:hover {
+        background: #dc3545;
+        color: white;
+      }
+
+      #chat {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 16px;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .message {
+        margin-bottom: 12px;
+        display: flex;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.user {
+        justify-content: flex-end;
+      }
+      .message.bot {
+        justify-content: flex-start;
+      }
+
+      .bubble {
+        max-width: 85%;
+        padding: 10px 14px;
+        border-radius: 18px;
+        font-size: clamp(13px, 4vw, 14px);
+        line-height: 1.5;
+        word-wrap: break-word;
+        word-break: break-word;
+      }
+
+      .user .bubble {
+        background: #007bff;
+        color: white;
+        border-bottom-right-radius: 4px;
+      }
+
+      .bot .bubble {
+        background: #e9ecef;
+        color: #333;
+        border-bottom-left-radius: 4px;
+      }
+
+      /* Markdown Styling */
+      .bot .bubble pre {
+        background: #2d2d2d;
+        color: #f8f8f2;
+        padding: 8px;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 8px 0;
+        font-size: 12px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .bot .bubble code {
+        font-family: "Courier New", monospace;
+        background: #d1ecf1;
+        color: #0c5460;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-size: 0.9em;
+      }
+
+      .bot .bubble pre code {
+        background: none;
+        color: inherit;
+        padding: 0;
+      }
+
+      .loading {
+        display: flex;
+        align-items: center;
+        color: #666;
+        font-style: italic;
+      }
+
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .input-area {
+        padding: 12px 12px 12px 12px;
+        background: white;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+      }
+
+      #input {
+        flex: 1;
+        padding: 11px 16px;
+        border: 1px solid #ddd;
+        border-radius: 24px;
+        outline: none;
+        font-size: 14px;
+        -webkit-appearance: none;
+        appearance: none;
+        font-size: 16px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+
+      #input:active,
+      #input:focus {
+        border-color: #007bff;
+      }
+
+      #sendBtn {
+        padding: 11px 18px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 24px;
+        cursor: pointer;
+        transition: 0.2s;
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 14px;
+        font-weight: 500;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      #sendBtn:active {
+        background: #0056b3;
+        transform: scale(0.98);
+      }
+
+      #sendBtn:hover {
+        background: #0056b3;
+      }
+
+      #sendBtn:disabled {
+        background: #ccc;
+        opacity: 0.6;
+      }
+
+      /* Tablet and larger screens */
+      @media (min-width: 768px) {
+        body {
+          padding: 20px;
+        }
+
+        .chat-container {
+          border-radius: 20px;
+          height: 85vh;
+          max-height: 600px;
+        }
+
+        h1 {
+          font-size: 1.3rem;
+        }
+
+        .header {
+          padding: 15px 18px;
+        }
+
+        .input-area {
+          padding: 16px 18px;
+        }
+
+        #input {
+          padding: 12px 18px;
+          font-size: 14px;
+        }
+
+        #sendBtn {
+          padding: 10px 24px;
+          font-size: 14px;
+        }
+      }
+
+      /* Landscape mode adjustments */
+      @media (max-height: 600px) {
+        .chat-container {
+          height: 100vh;
+          border-radius: 0;
+        }
+
+        h1 {
+          font-size: 1rem;
+        }
+
+        #chat {
+          padding: 12px;
+        }
+
+        .bubble {
+          padding: 8px 12px;
+          font-size: 13px;
+        }
+
+        .input-area {
+          padding: 8px;
+        }
+
+        #input,
+        #sendBtn {
+          min-height: 40px;
+        }
+      }
+
+      /* Dark mode support for notch devices */
+      @supports (padding: max(0px)) {
+        body {
+          padding: max(0px, env(safe-area-inset-left));
+          padding-right: max(0px, env(safe-area-inset-right));
+          padding-top: max(0px, env(safe-area-inset-top));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="header">
+        <h1>AI Assistant</h1>
+        <!-- <button id="clearBtn" onclick="clearChat()">Clear Chat</button> -->
+      </div>
+      <div id="chat"></div>
+      <div class="input-area">
+        <input
+          type="text"
+          id="input"
+          placeholder="Ask about SQL, Python, or Big Data..."
+        />
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+    <p>
+      <script>
+        const chat = document.getElementById("chat");
+        const input = document.getElementById("input");
+        const sendBtn = document.getElementById("sendBtn");
+
+        // --- CONFIGURATION --- // TO BE UPDATED FOR YOUR USE CASE!
+        const WELCOME_TEXT =
+          "Welcome! I'm your DAVA tutor. How can I help with your Big Data & Analytics module today?"; // TO UPDATE THIS WELCOME MESSAGE TO YOUR LIKING!
+        const API_URL = "https://geminibackenddava.vercel.app/api/chat"; // PLEASE UPDATE THIS TO YOUR DEPLOYED API ENDPOINT
+
+        // --- SESSION & HISTORY INITIALIZATION ---
+        let sessionId =
+          localStorage.getItem("dava_session_id") || `sess_${Date.now()}`;
+        localStorage.setItem("dava_session_id", sessionId);
+
+        console.log(`Currently in ${sessionId}`);
+        // Load history or initialize empty array
+        let chatHistory =
+          JSON.parse(localStorage.getItem("dava_chat_history")) || [];
+
+        // --- CORE FUNCTIONS ---
+
+        function loadHistory() {
+          chat.innerHTML = "";
+
+          // If history is empty, initialize it with the welcome message
+          if (chatHistory.length === 0) {
+            addMessage(WELCOME_TEXT, "bot");
+            // Store the welcome message as part of the formal history
+            chatHistory.push({
+              role: "model",
+              parts: [{ text: WELCOME_TEXT }],
+            });
+            saveToStorage();
+          } else {
+            // Render existing history
+            chatHistory.forEach((msg) => {
+              const sender = msg.role === "user" ? "user" : "bot";
+              addMessage(msg.parts[0].text, sender);
+            });
+          }
+        }
+
+        function addMessage(text, sender, isLoading = false) {
+          const messageDiv = document.createElement("div");
+          messageDiv.className = "message " + sender;
+          if (isLoading) messageDiv.classList.add("loading");
+
+          const bubble = document.createElement("div");
+          bubble.className = "bubble";
+
+          if (isLoading) {
+            const spinner = document.createElement("div");
+            spinner.className = "spinner";
+            bubble.appendChild(spinner);
+            bubble.appendChild(document.createTextNode("Thinking..."));
+          } else {
+            if (sender === "bot") {
+              bubble.innerHTML = marked.parse(text);
+            } else {
+              bubble.textContent = text;
+            }
+          }
+
+          messageDiv.appendChild(bubble);
+          chat.appendChild(messageDiv);
+          chat.scrollTop = chat.scrollHeight;
+          return messageDiv;
+        }
+
+        async function sendMessage() {
+          const messageText = input.value.trim();
+          if (!messageText) return;
+
+          // UI Update
+          addMessage(messageText, "user");
+          input.value = "";
+          sendBtn.disabled = true;
+
+          const loadingMessage = addMessage("", "bot", true);
+
+          try {
+            const response = await fetch(API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                message: messageText,
+                history: chatHistory,
+                sessionId:
+                  localStorage.getItem("dava_session_id") ||
+                  sessionId ||
+                  "null",
+              }),
+            });
+
+            if (!response.ok)
+              throw new Error("Server error. Please try again.");
+
+            const data = await response.json();
+
+            // Push both user message and AI reply into history
+            chatHistory.push({ role: "user", parts: [{ text: messageText }] });
+            chatHistory.push({
+              role: "model",
+              parts: [{ text: data.response }],
+            });
+
+            saveToStorage();
+
+            chat.removeChild(loadingMessage);
+            addMessage(data.response, "bot");
+          } catch (error) {
+            chat.removeChild(loadingMessage);
+            addMessage("Error: " + error.message, "bot");
+          } finally {
+            sendBtn.disabled = false;
+          }
+        }
+
+        function saveToStorage() {
+          localStorage.setItem(
+            "dava_chat_history",
+            JSON.stringify(chatHistory),
+          );
+        }
+
+        function clearChat() {
+          if (confirm("Clear your chat history?")) {
+            localStorage.removeItem("dava_chat_history");
+            localStorage.removeItem("dava_session_id");
+            chatHistory = [];
+            sessionId = `sess_${Date.now()}`;
+            localStorage.setItem("dava_session_id", sessionId);
+            loadHistory();
+          }
+        }
+
+        // Event Listeners
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") sendMessage();
+        });
+
+        // Initial Load
+        loadHistory();
+      </script>
+    </p>
+  </body>
+</html>
