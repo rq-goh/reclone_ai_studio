@@ -1,6 +1,6 @@
 // utils/googleSheetsLogger.js
 const logToSheet = async (
-  sessionId = "anonymous",
+  sessionId,
   userMessage,
   aiResponse,
   status = "Success",
